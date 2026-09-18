@@ -52,8 +52,69 @@ export const FAIL_URL = "https://cdn.example.com/videos/corrupt.mp4";
  * Suggested order of work: write the tests in __tests__/ first (one per stage boundary, one for
  * the failing URL), watch them fail, then make them pass.
  */
-export function computeRun(record: RunRecord, now: number = Date.now()): EncodeRun {
-  throw new Error("Not implemented: computeRun (see TODO above)");
+export function computeRun(
+  record: RunRecord,
+  now: number = Date.now(),
+): EncodeRun {
+  const elapsed = Math.max(0, now - record.startedAt);
+
+  const progressPct = Math.min(
+    100,
+    Math.round((elapsed / TIMELINE.transcodingEndsMs) * 100),
+  );
+
+  if (
+    record.sourceUrl === FAIL_URL &&
+    elapsed >= TIMELINE.failAtMs
+  ) {
+    return {
+      id: record.id,
+      jobId: record.jobId,
+      stage: "FAILED",
+      progressPct,
+      message: "Encoding failed.",
+      error: "The source file is corrupt.",
+    };
+  }
+
+  if (elapsed < TIMELINE.queuedEndsMs) {
+    return {
+      id: record.id,
+      jobId: record.jobId,
+      stage: "QUEUED",
+      progressPct,
+      message: "Waiting in queue…",
+    };
+  }
+
+  if (elapsed < TIMELINE.downloadingEndsMs) {
+    return {
+      id: record.id,
+      jobId: record.jobId,
+      stage: "DOWNLOADING",
+      progressPct,
+      message: "Downloading source…",
+    };
+  }
+
+  if (elapsed < TIMELINE.transcodingEndsMs) {
+    return {
+      id: record.id,
+      jobId: record.jobId,
+      stage: "TRANSCODING",
+      progressPct,
+      message: "Transcoding 1080p…",
+    };
+  }
+
+  return {
+    id: record.id,
+    jobId: record.jobId,
+    stage: "COMPLETED",
+    progressPct: 100,
+    message: "Encoding complete.",
+    result: makeResult(),
+  };
 }
 
 // ---------------------------------------------------------------------------
