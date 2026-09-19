@@ -42,11 +42,28 @@ export function useJob(id: string) {
 // Query "this data is out of date, refetch it" — which is how the UI updates without a reload.
 export function useStartRun(jobId: string) {
   const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: () => api.post<{ runId: string }>("/api/runs", { jobId }),
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: jobKeys.detail(jobId) });
       queryClient.invalidateQueries({ queryKey: jobKeys.all });
+    },
+  });
+}
+
+export function useCreateJob() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: CreateJobInput) =>
+      api.post<Job>("/api/jobs", input),
+
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: jobKeys.all,
+      });
     },
   });
 }
