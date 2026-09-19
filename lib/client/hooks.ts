@@ -89,5 +89,8 @@ export function useCreateJob() {
  * ask for it. Either a small `fetchRun(runId)` function using `api.get`, or a useQuery hook with
  * a `refetchInterval` — both are legitimate; pick one and say why in the README.
  */
+export async function fetchRun(runId: string): Promise<EncodeRun> {
+  return api.get<EncodeRun>(`/api/runs/${runId}`);
+}
 
 export type { EncodeRun, Job, CreateJobInput };
